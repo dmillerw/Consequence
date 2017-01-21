@@ -8,10 +8,17 @@ import org.luaj.vm2.LuaValue;
  */
 public class Script {
 
-    public String author;
+    public String tag;
     public String mainFile;
 
     public transient Globals globals;
-
     public transient LuaValue luaChunk;
+
+    public static class OwnedFunction {
+
+        public String owner;
+        public LuaValue function;
+
+        public boolean disabled = false;
+    }
 }
