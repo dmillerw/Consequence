@@ -14,6 +14,7 @@ import org.luaj.vm2.lib.TwoArgFunction;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
@@ -24,6 +25,24 @@ public class ScriptRegistry {
 
     private static Map<String, Script> loadedScripts = Maps.newHashMap();
     private static Map<String, Set<Script.OwnedFunction>> eventHandlers = Maps.newHashMap();
+
+    public static boolean reloadScript(String tag) {
+        if (!loadedScripts.containsKey(tag)) {
+            return false;
+        }
+
+        Script script = loadedScripts.get(tag);
+        script.globals = null;
+        script.luaChunk = null;
+
+        Iterator<Set<Script.OwnedFunction>> iterator = eventHandlers.values().iterator();
+        while (iterator.hasNext())
+            iterator.next().removeIf(function -> function.owner.equals(tag));
+
+        loadScript(script);
+
+        return true;
+    }
 
     public static void initialize(File directory) {
         for (File dir : directory.listFiles()) {
@@ -43,35 +62,39 @@ public class ScriptRegistry {
                 }
 
                 if (script != null) {
-                    Globals globals = new Globals();
-                    Consequence.PROXY.buildLuaGlobals(globals);
-                    LoadState.install(globals);
-                    LuaC.install(globals);
-
-                    script.globals = globals;
-
-                    File main = new File(dir, script.mainFile);
-                    if (!main.exists()) {
-                        Consequence.INSTANCE.logger.warn("Couldn't load " + dir.getName() + "/" + script.mainFile + " as it does not exist");
-                        continue;
-                    }
-
-                    try {
-                        script.luaChunk = script.globals.load(new FileReader(main), script.mainFile);
-                    } catch (IOException ex) {
-                        Consequence.INSTANCE.logger.warn("Failed to load script from " + main.getName());
-                        Consequence.INSTANCE.logger.warn(ex);
-                    }
-
-                    if (script.luaChunk != null) {
-                        script.luaChunk.call();
-                        script.globals.get("main").call(new Registry(script.tag));
-                    }
-
-                    loadedScripts.put(script.tag, script);
+                    script.main = new File(dir, script.mainFile);
+                    loadScript(script);
                 }
             }
         }
+    }
+
+    private static void loadScript(Script script) {
+        Globals globals = new Globals();
+        Consequence.PROXY.buildLuaGlobals(globals);
+        LoadState.install(globals);
+        LuaC.install(globals);
+
+        script.globals = globals;
+
+        if (!script.main.exists()) {
+            Consequence.INSTANCE.logger.warn("Couldn't load " + script.main.getName() + " as it does not exist");
+            return;
+        }
+
+        try {
+            script.luaChunk = script.globals.load(new FileReader(script.main), script.mainFile);
+        } catch (IOException ex) {
+            Consequence.INSTANCE.logger.warn("Failed to load script from " + script.main.getName());
+            Consequence.INSTANCE.logger.warn(ex);
+        }
+
+        if (script.luaChunk != null) {
+            script.luaChunk.call();
+            script.globals.get("main").call(new Registry(script.tag));
+        }
+
+        loadedScripts.put(script.tag, script);
     }
 
     public static <T extends Event> void fireEvent(String tag, Class<T> clazz, T event) {
@@ -100,6 +123,7 @@ public class ScriptRegistry {
     private static class Registry extends LuaTable {
 
         private String owner;
+
         public Registry(String owner) {
             this.owner = owner;
 

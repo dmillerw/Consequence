@@ -1,10 +1,12 @@
 package me.dmillerw.consequence;
 
+import me.dmillerw.consequence.command.CommandReloadScript;
 import me.dmillerw.consequence.lib.ModInfo;
 import me.dmillerw.consequence.proxy.IProxy;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.SidedProxy;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
+import net.minecraftforge.fml.common.event.FMLServerStartingEvent;
 import org.apache.logging.log4j.Logger;
 
 import java.io.File;
@@ -36,5 +38,10 @@ public class Consequence {
         Consequence.INSTANCE.logger = event.getModLog();
 
         PROXY.preInit(event);
+    }
+
+    @Mod.EventHandler
+    public void serverStartingEvent(FMLServerStartingEvent event) {
+        event.registerServerCommand(new CommandReloadScript());
     }
 }
