@@ -5,9 +5,11 @@ import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import com.google.common.collect.Maps;
 import com.google.gson.annotations.SerializedName;
+import me.dmillerw.consequence.Consequence;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.util.Arrays;
 import java.util.Map;
 
 /**
@@ -23,6 +25,7 @@ public class AdapterInfo {
     public VariableInfo[] variables = new VariableInfo[0];
     public MethodInfo[] methods = new MethodInfo[0];
 
+    public transient String filename;
     public transient Data data;
 
     public static class VariableInfo {
@@ -31,7 +34,6 @@ public class AdapterInfo {
         public String javaName;
         @SerializedName("lua_name")
         public String luaName;
-        public String type;
     }
 
     public static class MethodInfo {
@@ -41,8 +43,6 @@ public class AdapterInfo {
         @SerializedName("lua_name")
         public String luaName;
         public String[] paramaters = new String[0];
-        @SerializedName("return_type")
-        public String returnType;
     }
 
     public static class Data {
@@ -75,12 +75,18 @@ public class AdapterInfo {
             try {
                 this.clazz = Class.forName(parent.clazz.replace("/", "."));
             } catch (ClassNotFoundException e) {
-                e.printStackTrace();
+                this.clazz = null;
+
+                Consequence.logger.warn("Failed to load " + parent.filename + ". " + parent.clazz + " is not a valid Java class");
             }
+
 
             this.variables = Maps.newHashMap();
             this.methods = Maps.newHashMap();
             this.luaToJavaMap = HashBiMap.create();
+
+            if (this.clazz == null)
+                return;
 
             try {
                 initializeReflection(parent);
@@ -90,27 +96,48 @@ public class AdapterInfo {
         }
 
         private void initializeReflection(AdapterInfo parent) {
-            try {
-                for (AdapterInfo.VariableInfo variable : parent.variables) {
+            for (VariableInfo variable : parent.variables) {
+                Field field;
+                try {
+                    field = clazz.getField(variable.javaName);
+                } catch (NoSuchFieldException ex) {
+                    field = null;
+
+                    Consequence.logger.warn("Ran into an issue while building adapters from " + parent.filename);
+                    Consequence.logger.warn("The variable " + variable.javaName + " does not exist within " + parent.clazz + ". It will be ignored");
+                }
+
+                if (field != null) {
                     luaToJavaMap.put(variable.luaName, variable.javaName);
-
-                    variables.put(variable.javaName, clazz.getField(variable.javaName));
+                    variables.put(variable.javaName, field);
                 }
+            }
 
-                for (AdapterInfo.MethodInfo method : parent.methods) {
-                    luaToJavaMap.put(method.luaName, method.javaName + "()");
-
-                    Class[] params = new Class[method.paramaters.length];
-//                    Class ret = getClassFromString(method.returnType);
-
-                    for (int i=0; i<params.length; i++) {
-                        params[i] = getClassFromString(method.paramaters[i]);
+            for (MethodInfo methodInfo : parent.methods) {
+                Class[] params = new Class[methodInfo.paramaters.length];
+                for (int i=0; i<params.length; i++) {
+                    try {
+                        params[i] = getClassFromString(methodInfo.paramaters[i]);
+                    } catch (ClassNotFoundException ex) {
+                        Consequence.logger.warn("Ran into an issue while building adapters from " + parent.filename);
+                        Consequence.logger.warn("The paramater " + methodInfo.paramaters[i] + " is not a valid class. The method " + methodInfo.javaName + " will be ignored");
                     }
-
-                    methods.put(method.javaName + "()", clazz.getMethod(method.javaName, params));
                 }
-            } catch (Exception ex) {
-                ex.printStackTrace();
+
+                Method method;
+                try {
+                    method = clazz.getMethod(methodInfo.javaName, params);
+                } catch (NoSuchMethodException ex) {
+                    method = null;
+
+                    Consequence.logger.warn("Ran into an issue while building adapters from " + parent.filename);
+                    Consequence.logger.warn("The method " + methodInfo.javaName + " and parameters " + Arrays.toString(methodInfo.paramaters) + " do not exist within " + parent.clazz + ". It will be ignored");
+                }
+
+                if (method != null) {
+                    luaToJavaMap.put(methodInfo.luaName, methodInfo.javaName + "()");
+                    methods.put(methodInfo.javaName + "()", method);
+                }
             }
         }
 

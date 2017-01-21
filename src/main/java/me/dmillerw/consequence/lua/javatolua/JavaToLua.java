@@ -1,6 +1,7 @@
 package me.dmillerw.consequence.lua.javatolua;
 
 import com.google.common.collect.Maps;
+import me.dmillerw.consequence.Consequence;
 import me.dmillerw.consequence.lua.javatolua.adapter.AdapterInfo;
 import me.dmillerw.consequence.lua.javatolua.adapter.ObjectAdapter;
 import me.dmillerw.consequence.lua.javatolua.adapter.special.ListAdapter;
@@ -48,12 +49,18 @@ public class JavaToLua {
 
     public static void initializeAdapterRegistry(File directory) {
         for (File file : directory.listFiles((dir, name) -> name.endsWith("json"))) {
+            AdapterInfo info;
             try {
-                AdapterInfo info = GsonUtil.gson().fromJson(new FileReader(file), AdapterInfo.class);
-                registerAdapter(info);
+                info = GsonUtil.gson().fromJson(new FileReader(file), AdapterInfo.class);
             } catch (IOException ex) {
+                Consequence.logger.warn("Failed to load type adapter from " + file.getName());
+                Consequence.logger.warn(ex);
                 continue;
             }
+
+            info.filename = file.getName();
+
+            registerAdapter(info);
         }
 
         for (Class clazz : registeredAdapters.keySet()) {
@@ -77,6 +84,7 @@ public class JavaToLua {
 
     public static void registerAdapter(AdapterInfo info) {
         if (info.data == null) info.data = new AdapterInfo.Data(info);
+        if (info.data.clazz == null) return;
         registeredAdapters.put(info.data.clazz, info);
     }
 
