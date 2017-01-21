@@ -53,8 +53,8 @@ public class JavaToLua {
             try {
                 info = GsonUtil.gson().fromJson(new FileReader(file), AdapterInfo.class);
             } catch (IOException ex) {
-                Consequence.logger.warn("Failed to load type adapter from " + file.getName());
-                Consequence.logger.warn(ex);
+                Consequence.INSTANCE.logger.warn("Failed to load type adapter from " + file.getName());
+                Consequence.INSTANCE.logger.warn(ex);
                 continue;
             }
 

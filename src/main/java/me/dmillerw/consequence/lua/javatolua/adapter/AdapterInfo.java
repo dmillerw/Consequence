@@ -30,19 +30,15 @@ public class AdapterInfo {
 
     public static class VariableInfo {
 
-        @SerializedName("java_name")
-        public String javaName;
-        @SerializedName("lua_name")
-        public String luaName;
+        public String java;
+        public String lua;
     }
 
     public static class MethodInfo {
 
-        @SerializedName("java_name")
-        public String javaName;
-        @SerializedName("lua_name")
-        public String luaName;
-        public String[] paramaters = new String[0];
+        public String java;
+        public String lua;
+        public String[] parameters = new String[0];
     }
 
     public static class Data {
@@ -77,7 +73,7 @@ public class AdapterInfo {
             } catch (ClassNotFoundException e) {
                 this.clazz = null;
 
-                Consequence.logger.warn("Failed to load " + parent.filename + ". " + parent.clazz + " is not a valid Java class");
+                Consequence.INSTANCE.logger.warn("Failed to load " + parent.filename + ". " + parent.clazz + " is not a valid Java class");
             }
 
 
@@ -99,44 +95,44 @@ public class AdapterInfo {
             for (VariableInfo variable : parent.variables) {
                 Field field;
                 try {
-                    field = clazz.getField(variable.javaName);
+                    field = clazz.getField(variable.java);
                 } catch (NoSuchFieldException ex) {
                     field = null;
 
-                    Consequence.logger.warn("Ran into an issue while building adapters from " + parent.filename);
-                    Consequence.logger.warn("The variable " + variable.javaName + " does not exist within " + parent.clazz + ". It will be ignored");
+                    Consequence.INSTANCE.logger.warn("Ran into an issue while building adapters from " + parent.filename);
+                    Consequence.INSTANCE.logger.warn("The variable " + variable.java + " does not exist within " + parent.clazz + ". It will be ignored");
                 }
 
                 if (field != null) {
-                    luaToJavaMap.put(variable.luaName, variable.javaName);
-                    variables.put(variable.javaName, field);
+                    luaToJavaMap.put(variable.lua, variable.java);
+                    variables.put(variable.java, field);
                 }
             }
 
             for (MethodInfo methodInfo : parent.methods) {
-                Class[] params = new Class[methodInfo.paramaters.length];
+                Class[] params = new Class[methodInfo.parameters.length];
                 for (int i=0; i<params.length; i++) {
                     try {
-                        params[i] = getClassFromString(methodInfo.paramaters[i]);
+                        params[i] = getClassFromString(methodInfo.parameters[i]);
                     } catch (ClassNotFoundException ex) {
-                        Consequence.logger.warn("Ran into an issue while building adapters from " + parent.filename);
-                        Consequence.logger.warn("The paramater " + methodInfo.paramaters[i] + " is not a valid class. The method " + methodInfo.javaName + " will be ignored");
+                        Consequence.INSTANCE.logger.warn("Ran into an issue while building adapters from " + parent.filename);
+                        Consequence.INSTANCE.logger.warn("The paramater " + methodInfo.parameters[i] + " is not a valid class. The method " + methodInfo.java + " will be ignored");
                     }
                 }
 
                 Method method;
                 try {
-                    method = clazz.getMethod(methodInfo.javaName, params);
+                    method = clazz.getMethod(methodInfo.java, params);
                 } catch (NoSuchMethodException ex) {
                     method = null;
 
-                    Consequence.logger.warn("Ran into an issue while building adapters from " + parent.filename);
-                    Consequence.logger.warn("The method " + methodInfo.javaName + " and parameters " + Arrays.toString(methodInfo.paramaters) + " do not exist within " + parent.clazz + ". It will be ignored");
+                    Consequence.INSTANCE.logger.warn("Ran into an issue while building adapters from " + parent.filename);
+                    Consequence.INSTANCE.logger.warn("The method " + methodInfo.java + " and parameters " + Arrays.toString(methodInfo.parameters) + " do not exist within " + parent.clazz + ". It will be ignored");
                 }
 
                 if (method != null) {
-                    luaToJavaMap.put(methodInfo.luaName, methodInfo.javaName + "()");
-                    methods.put(methodInfo.javaName + "()", method);
+                    luaToJavaMap.put(methodInfo.lua, methodInfo.java + "()");
+                    methods.put(methodInfo.java + "()", method);
                 }
             }
         }

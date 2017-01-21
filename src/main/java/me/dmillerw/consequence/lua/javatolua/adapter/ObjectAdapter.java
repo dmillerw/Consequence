@@ -23,7 +23,7 @@ public class ObjectAdapter extends BaseAdapter {
         this.info = JavaToLua.getAdapter(object.getClass());
         this.object = object;
 
-        this.rawset("_java_class", this.info.clazz);
+        this.rawset("_java_class", object.getClass().getName());
     }
 
     @Override

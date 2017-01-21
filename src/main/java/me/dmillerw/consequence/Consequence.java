@@ -1,11 +1,9 @@
 package me.dmillerw.consequence;
 
-import me.dmillerw.consequence.event.handler.ItemTooltipHandler;
 import me.dmillerw.consequence.lib.ModInfo;
-import me.dmillerw.consequence.lua.javatolua.JavaToLua;
-import me.dmillerw.consequence.script.ScriptRegistry;
-import net.minecraftforge.common.MinecraftForge;
+import me.dmillerw.consequence.proxy.IProxy;
 import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.common.SidedProxy;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import org.apache.logging.log4j.Logger;
 
@@ -17,23 +15,26 @@ import java.io.File;
 @Mod(modid = ModInfo.MOD_ID, name = ModInfo.MOD_NAME, version = ModInfo.MOD_VERSION)
 public class Consequence {
 
-    public static File adapterDir;
-    public static File scriptDir;
+    @Mod.Instance(ModInfo.MOD_ID)
+    public static Consequence INSTANCE;
+    
+    @SidedProxy(serverSide = "me.dmillerw.consequence.proxy.CommonProxy", clientSide = "me.dmillerw.consequence.proxy.ClientProxy")
+    public static IProxy PROXY;
+    
+    public File adapterDir;
+    public File scriptDir;
 
-    public static Logger logger;
+    public Logger logger;
 
     @Mod.EventHandler
     public void preInit(FMLPreInitializationEvent event) {
-        Consequence.adapterDir = new File(event.getModConfigurationDirectory(), "consequence/adapters");
-        if (!Consequence.adapterDir.exists()) Consequence.adapterDir.mkdirs();
-        Consequence.scriptDir = new File(event.getModConfigurationDirectory(), "consequence/scripts");
-        if (!Consequence.scriptDir.exists()) Consequence.scriptDir.mkdirs();
+        Consequence.INSTANCE.INSTANCE.adapterDir = new File(event.getModConfigurationDirectory(), "consequence/adapters");
+        if (!Consequence.INSTANCE.adapterDir.exists()) Consequence.INSTANCE.adapterDir.mkdirs();
+        Consequence.INSTANCE.scriptDir = new File(event.getModConfigurationDirectory(), "consequence/scripts");
+        if (!Consequence.INSTANCE.scriptDir.exists()) Consequence.INSTANCE.scriptDir.mkdirs();
 
-        Consequence.logger = event.getModLog();
+        Consequence.INSTANCE.logger = event.getModLog();
 
-        JavaToLua.initializeAdapterRegistry(Consequence.adapterDir);
-        ScriptRegistry.initialize(Consequence.scriptDir);
-
-        MinecraftForge.EVENT_BUS.register(new ItemTooltipHandler());
+        PROXY.preInit(event);
     }
 }

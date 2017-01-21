@@ -5,11 +5,11 @@ import com.google.common.collect.Sets;
 import me.dmillerw.consequence.Consequence;
 import me.dmillerw.consequence.lua.javatolua.JavaToLua;
 import me.dmillerw.consequence.util.GsonUtil;
-import org.luaj.vm2.LuaBoolean;
-import org.luaj.vm2.LuaTable;
-import org.luaj.vm2.LuaValue;
+import net.minecraftforge.fml.common.FMLCommonHandler;
+import net.minecraftforge.fml.common.eventhandler.Event;
+import org.luaj.vm2.*;
+import org.luaj.vm2.compiler.LuaC;
 import org.luaj.vm2.lib.TwoArgFunction;
-import org.luaj.vm2.lib.jse.JsePlatform;
 
 import java.io.File;
 import java.io.FileReader;
@@ -36,26 +36,31 @@ public class ScriptRegistry {
                 try {
                     script = GsonUtil.gson().fromJson(new FileReader(info), Script.class);
                 } catch (IOException ex) {
-                    Consequence.logger.warn("Failed to load " + dir.getName() + "/info.json. Any attached scripts will not be loaded");
-                    Consequence.logger.warn(ex);
+                    Consequence.INSTANCE.logger.warn("Failed to load " + dir.getName() + "/info.json. Any attached scripts will not be loaded");
+                    Consequence.INSTANCE.logger.warn(ex);
 
                     continue;
                 }
 
                 if (script != null) {
-                    script.globals = JsePlatform.standardGlobals(); //TODO Our own globals
+                    Globals globals = new Globals();
+                    Consequence.PROXY.buildLuaGlobals(globals);
+                    LoadState.install(globals);
+                    LuaC.install(globals);
+
+                    script.globals = globals;
 
                     File main = new File(dir, script.mainFile);
                     if (!main.exists()) {
-                        Consequence.logger.warn("Couldn't load " + dir.getName() + "/" + script.mainFile + " as it does not exist");
+                        Consequence.INSTANCE.logger.warn("Couldn't load " + dir.getName() + "/" + script.mainFile + " as it does not exist");
                         continue;
                     }
 
                     try {
                         script.luaChunk = script.globals.load(new FileReader(main), script.mainFile);
                     } catch (IOException ex) {
-                        Consequence.logger.warn("Failed to load script from " + main.getName());
-                        Consequence.logger.warn(ex);
+                        Consequence.INSTANCE.logger.warn("Failed to load script from " + main.getName());
+                        Consequence.INSTANCE.logger.warn(ex);
                     }
 
                     if (script.luaChunk != null) {
@@ -69,15 +74,25 @@ public class ScriptRegistry {
         }
     }
 
-    public static <T> void fireEvent(String tag, Class<T> clazz, T event) {
+    public static <T extends Event> void fireEvent(String tag, Class<T> clazz, T event) {
         LuaValue eventValue = JavaToLua.convert(event);
+        eventValue.rawset("side", JavaToLua.convert(FMLCommonHandler.instance().getSide()));
+
+        if (!eventHandlers.containsKey(tag))
+            return;
+
         for (Script.OwnedFunction handler : eventHandlers.get(tag)) {
+            if (handler.disabled)
+                continue;
+
             try {
                 handler.function.call(eventValue);
             } catch (Exception ex) {
-                Consequence.logger.warn("The script '" + handler.owner + "' into an issue while handling event'" + tag + "'");
-                Consequence.logger.warn("To prevent issues and negative effects to gameplay, it will be disabled until the next time the game starts");
-                Consequence.logger.warn(ex);
+                handler.disabled = true;
+
+                Consequence.INSTANCE.logger.warn("The script '" + handler.owner + "' into an issue while handling event'" + tag + "'");
+                Consequence.INSTANCE.logger.warn("To prevent issues and negative effects to gameplay, it will be disabled until the next time the game starts");
+                Consequence.INSTANCE.logger.warn(ex);
             }
         }
     }
