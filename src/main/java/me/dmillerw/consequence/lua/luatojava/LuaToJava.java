@@ -1,6 +1,6 @@
 package me.dmillerw.consequence.lua.luatojava;
 
-import me.dmillerw.consequence.lua.javatolua.adapter.ObjectAdapter;
+import me.dmillerw.consequence.lua.javatolua.adapter.LuaObject;
 import org.luaj.vm2.LuaValue;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
@@ -26,9 +26,9 @@ public class LuaToJava {
             if (LuaValue.class.isAssignableFrom(javaType)) {
                 return value;
             } else {
-                if (value instanceof ObjectAdapter) {
-                    if (((ObjectAdapter) value).getObject().getClass().isAssignableFrom(javaType)) {
-                        return ((ObjectAdapter) value).getObject();
+                if (value instanceof LuaObject) {
+                    if (((LuaObject) value).getObject().getClass().isAssignableFrom(javaType)) {
+                        return ((LuaObject) value).getObject();
                     } else {
                         return null;
                     }

@@ -1,7 +1,7 @@
 package me.dmillerw.consequence.lua.javatolua.adapter.special;
 
 import me.dmillerw.consequence.lua.javatolua.JavaToLua;
-import me.dmillerw.consequence.lua.javatolua.adapter.BaseAdapter;
+import me.dmillerw.consequence.lua.javatolua.adapter.SimpleTable;
 import me.dmillerw.consequence.lua.luatojava.LuaToJava;
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.lib.OneArgFunction;
@@ -11,7 +11,7 @@ import java.util.List;
 /**
  * @author dmillerw
  */
-public class ListAdapter extends BaseAdapter {
+public class ListAdapter extends SimpleTable {
 
     private List list;
     private Class type;

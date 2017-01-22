@@ -2,8 +2,8 @@ package me.dmillerw.consequence.lua.javatolua;
 
 import com.google.common.collect.Maps;
 import me.dmillerw.consequence.Consequence;
-import me.dmillerw.consequence.lua.javatolua.adapter.AdapterInfo;
-import me.dmillerw.consequence.lua.javatolua.adapter.ObjectAdapter;
+import me.dmillerw.consequence.lua.javatolua.adapter.LuaObject;
+import me.dmillerw.consequence.lua.javatolua.adapter.Adapter;
 import me.dmillerw.consequence.lua.javatolua.adapter.special.ListAdapter;
 import me.dmillerw.consequence.util.GsonUtil;
 import org.luaj.vm2.*;
@@ -32,7 +32,7 @@ public class JavaToLua {
             return primitiveToLua(((Enum)object).name());
         }
 
-        //TODO
+        //TODO: This is NOT teh way to handle this
         if (object instanceof List) {
             return new ListAdapter((List) object);
         }
@@ -40,13 +40,14 @@ public class JavaToLua {
         if (isPrimitive(object)) {
             return primitiveToLua(object);
         } else {
-            return adaptObject(object);
+            LuaObject luaObject = adaptObject(object);
+            return luaObject == null ? LuaValue.NIL : luaObject;
         }
     }
 
     /* ADAPTERS */
 
-    private static Map<Class, AdapterInfo> registeredAdapters = Maps.newHashMap();
+    private static Map<Class, Adapter> registeredAdapters = Maps.newHashMap();
 
     private static void loadFiles(File directory) {
         for (File file : directory.listFiles()) {
@@ -55,18 +56,18 @@ public class JavaToLua {
                 continue;
             }
 
-            AdapterInfo info;
+            Adapter.Data data;
             try {
-                info = GsonUtil.gson().fromJson(new FileReader(file), AdapterInfo.class);
+                data = GsonUtil.gson().fromJson(new FileReader(file), Adapter.Data.class);
             } catch (IOException ex) {
                 Consequence.INSTANCE.logger.warn("Failed to load type adapter from " + file.getName());
                 Consequence.INSTANCE.logger.warn(ex);
                 continue;
             }
 
-            info.filename = file.getName();
+            data.filename = file.getName();
 
-            registerAdapter(info);
+            registerAdapter(new Adapter(data));
         }
     }
 
@@ -76,12 +77,12 @@ public class JavaToLua {
         for (Class clazz : registeredAdapters.keySet()) {
             // First, for each class we have registered, merge in any adapters that have to do with
             // interfaces this class implements
-            AdapterInfo base = registeredAdapters.get(clazz);
+            Adapter base = registeredAdapters.get(clazz);
 
             for (Class iface : clazz.getInterfaces()) {
-                AdapterInfo info = registeredAdapters.get(iface);
+                Adapter info = registeredAdapters.get(iface);
                 if (info != null) {
-                    base.data = AdapterInfo.Data.merge(base.data, info.data);
+                    base = Adapter.merge(base, info);
                 }
             }
 
@@ -89,9 +90,9 @@ public class JavaToLua {
             // we find, so that a class adapter has all the defined information of its parent classes as well
             Class parent = clazz.getSuperclass();
             while (parent != null && parent != Object.class) {
-                AdapterInfo info = registeredAdapters.get(parent);
+                Adapter info = registeredAdapters.get(parent);
                 if (info != null) {
-                    base.data = AdapterInfo.Data.merge(base.data, info.data);
+                    base = Adapter.merge(base, info);
                 }
 
                 parent = parent.getSuperclass();
@@ -101,15 +102,14 @@ public class JavaToLua {
         }
     }
 
-    public static void registerAdapter(AdapterInfo info) {
-        if (info.data == null) info.data = new AdapterInfo.Data(info);
-        if (info.data.clazz == null) return;
-        registeredAdapters.put(info.data.clazz, info);
+    public static void registerAdapter(Adapter info) {
+        if (info.clazz == null) return;
+        registeredAdapters.put(info.clazz, info);
     }
 
-    public static AdapterInfo getAdapter(Class clazz) {
+    public static Adapter getAdapter(Class clazz) {
         if (clazz == Object.class)
-            return AdapterInfo.BLANK;
+            return Adapter.BLANK;
 
         if (registeredAdapters.containsKey(clazz)) {
             return registeredAdapters.get(clazz);
@@ -118,8 +118,12 @@ public class JavaToLua {
         }
     }
 
-    public static ObjectAdapter adaptObject(Object object) {
-        return new ObjectAdapter(object);
+    public static LuaObject adaptObject(Object object) {
+        Adapter adapter = JavaToLua.getAdapter(object.getClass());
+        if (adapter == null)
+            return null;
+        else
+            return new LuaObject(adapter, object);
     }
 
     /* END ADAPTERS */

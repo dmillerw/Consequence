@@ -6,7 +6,7 @@ import org.luaj.vm2.LuaValue;
 /**
  * @author dmillerw
  */
-public class BaseAdapter extends LuaTable {
+public class SimpleTable extends LuaTable {
 
     public boolean setValue(String key, LuaValue value) {
         return false;

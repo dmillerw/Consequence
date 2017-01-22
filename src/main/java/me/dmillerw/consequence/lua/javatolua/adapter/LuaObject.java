@@ -12,22 +12,22 @@ import java.lang.reflect.Method;
 /**
  * @author dmillerw
  */
-public class ObjectAdapter extends BaseAdapter {
+public class LuaObject extends SimpleTable {
 
-    private final AdapterInfo info;
+    private final Adapter adapter;
     private final Object object;
 
-    public ObjectAdapter(Object object) {
+    public LuaObject(Adapter adapter, Object object) {
         super();
 
-        this.info = JavaToLua.getAdapter(object.getClass());
+        this.adapter = adapter;
         this.object = object;
 
         this.rawset("_java_class", object.getClass().getName());
     }
 
-    public final AdapterInfo getAdapterInfo() {
-        return info;
+    public final Adapter getAdapter() {
+        return adapter;
     }
 
     public final Object getObject() {
@@ -36,10 +36,10 @@ public class ObjectAdapter extends BaseAdapter {
 
     @Override
     public LuaValue getValue(String key) {
-        String java = info.data.luaToJavaMap.get(key);
+        String java = adapter.luaToJavaMap.get(key);
         if (java != null) {
             if (java.endsWith("()")) {
-                Method method = info.data.methods.get(java);
+                Method method = adapter.methods.get(java);
                 return new VarArgFunction() {
                     @Override
                     public Varargs invoke(Varargs args) {
@@ -49,7 +49,7 @@ public class ObjectAdapter extends BaseAdapter {
                         }
 
                         try {
-                            return JavaToLua.convert(method.invoke(ObjectAdapter.this.object, data));
+                            return JavaToLua.convert(method.invoke(LuaObject.this.object, data));
                         } catch (Exception ex) {
                             ex.printStackTrace();
                             return NIL;
@@ -58,7 +58,7 @@ public class ObjectAdapter extends BaseAdapter {
                 };
             } else {
                 try {
-                    return JavaToLua.convert(info.data.variables.get(java).get(this.object));
+                    return JavaToLua.convert(adapter.variables.get(java).get(this.object));
                 } catch (Exception ex) {
                     ex.printStackTrace();
                     return NIL;
@@ -71,12 +71,12 @@ public class ObjectAdapter extends BaseAdapter {
 
     @Override
     public boolean setValue(String key, LuaValue value) {
-        String java = info.data.luaToJavaMap.get(key);
+        String java = adapter.luaToJavaMap.get(key);
         if (java != null) {
             if (java.endsWith("()")) {
                 return true;
             } else {
-                Field field = info.data.variables.get(java);
+                Field field = adapter.variables.get(java);
                 try {field.set(this.object, LuaToJava.convert(field.getType(), value));} catch (Exception ignore) { ignore.printStackTrace(); }
                 return true;
             }
