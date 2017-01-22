@@ -1,0 +1,6 @@
+{
+  "class": "net.minecraftforge.event.entity.player.ItemTooltipEvent",
+  "methods": [
+    {"name": ["get_tooltip", "getToolTip"]}
+  ]
+}

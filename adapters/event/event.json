@@ -1,0 +1,17 @@
+{
+  "class": "net.minecraftforge.fml.common.eventhandler.Event",
+  "methods": [
+    {"name": ["is_cancelable", "isCancelable"]},
+    {"name": ["is_canceled", "isCanceled"]},
+    {
+      "name": ["set_canceled", "setCanceled"],
+      "parameters": ["Z"]
+    },
+    {"name": ["has_result", "hasResult"]},
+    {"name": ["get_result", "getResult"]},
+    {
+      "name": ["set_result", "setResult"],
+      "parameters": ["net/minecraftforge/fml/common/eventhandler/Event$Result"]
+    }
+  ]
+}

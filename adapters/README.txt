@@ -1,0 +1,1 @@
+For the purposes of this repository, these are available for example. But when actually being used, they should be located in 'config/consequence/adapters'

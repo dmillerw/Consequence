@@ -1,0 +1,13 @@
+{
+  "class": "net.minecraft.item.Item",
+  "methods": [
+    {
+      "lua": ["get_unlocalized_name", "getUnlocalizedName"],
+      "parameters": ["net/minecraft/item/ItemStack"]
+    },
+    {
+      "name": ["get_display_name", "getDisplayName"],
+      "parameters": ["net/minecraft/item/ItemStack"]
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "class": "net.minecraft.entity.player.EntityPlayer",
+  "methods": [
+    {
+      "name": ["get_stack_in_equipment_slot", "getItemStackFromSlot"],
+      "parameters": ["net.minecraft.inventory.EntityEquipmentSlot"]
+    }
+  ]
+}

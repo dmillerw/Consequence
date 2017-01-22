@@ -1,0 +1,6 @@
+{
+  "class": "net.minecraft.item.ItemStack",
+  "methods": [
+    {"name": ["get_item", "getItem"]}
+  ]
+}

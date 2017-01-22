@@ -1,0 +1,7 @@
+{
+  "class": "net.minecraft.util.ResourceLocation",
+  "methods": [
+    { "name": ["get_resource_domain", "getResourceDomain"] },
+    { "name": ["get_resource_path", "getResourcePath"] }
+  ]
+}

@@ -1,0 +1,8 @@
+{
+  "class": "net.minecraftforge.fml.common.registry.IForgeRegistryEntry",
+  "methods": [
+    {
+      "name": ["get_registry_name", "getRegistryName"]
+    }
+  ]
+}

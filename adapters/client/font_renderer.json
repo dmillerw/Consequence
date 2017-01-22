@@ -1,0 +1,12 @@
+{
+  "class": "net.minecraft.client.gui.FontRenderer",
+  "variables": [
+    { "name": ["font_height", "FONT_HEIGHT"] }
+  ],
+  "methods": [
+    {
+      "name": ["draw_string", "drawString"],
+      "parameters": ["java/lang/String", "I", "I", "I"]
+    }
+  ]
+}

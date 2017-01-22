@@ -1,0 +1,6 @@
+{
+  "class": "net.minecraftforge.fml.common.gameevent.TickEvent$PlayerTickEvent",
+  "variables": [
+    {"name": "player"}
+  ]
+}
