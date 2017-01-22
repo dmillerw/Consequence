@@ -3,8 +3,6 @@ package me.dmillerw.consequence;
 import me.dmillerw.consequence.command.CommandReloadScript;
 import me.dmillerw.consequence.lib.ModInfo;
 import me.dmillerw.consequence.proxy.IProxy;
-import net.minecraft.entity.player.EntityPlayer;
-import net.minecraft.item.ItemStack;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.SidedProxy;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
@@ -34,7 +32,7 @@ public class Consequence {
 
     @Mod.EventHandler
     public void preInit(FMLPreInitializationEvent event) {
-        Consequence.INSTANCE.INSTANCE.adapterDir = new File(event.getModConfigurationDirectory(), "consequence/adapters");
+        Consequence.INSTANCE.adapterDir = new File(event.getModConfigurationDirectory(), "consequence/adapters");
         if (!Consequence.INSTANCE.adapterDir.exists()) Consequence.INSTANCE.adapterDir.mkdirs();
         Consequence.INSTANCE.scriptDir = new File(event.getModConfigurationDirectory(), "consequence/scripts");
         if (!Consequence.INSTANCE.scriptDir.exists()) Consequence.INSTANCE.scriptDir.mkdirs();

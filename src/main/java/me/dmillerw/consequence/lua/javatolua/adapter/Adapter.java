@@ -112,8 +112,6 @@ public class Adapter {
     private void initializeReflection(Data data) {
         String className = data.clazz.replace(".", "/");
 
-        Consequence.INSTANCE.logger.info("Adapting " + className + "(" + MappingLookup.mapClass(className) + ")");
-
         for (VariableInfo variable : data.variables) {
             String name = MappingLookup.mapField(className, variable.java(), variable.type);
 
@@ -148,9 +146,7 @@ public class Adapter {
             for (int i=0; i<methodInfo.parameters.length; i++) desc = desc + formatClassToASM(methodInfo.parameters[i]);
             desc = desc + ")" + formatClassToASM(methodInfo.returnType);
 
-            System.out.println("UNMAPPED METHOD: " + methodInfo.java());
             String name = MappingLookup.mapMethod(className, methodInfo.java(), desc);
-            System.out.println("MAPPED METHOD: " + name);
 
             Method method;
             try {
