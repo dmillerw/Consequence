@@ -116,6 +116,8 @@ public class ScriptRegistry {
                 Consequence.INSTANCE.logger.warn("The script '" + handler.owner + "' into an issue while handling event'" + tag + "'");
                 Consequence.INSTANCE.logger.warn("To prevent issues and negative effects to gameplay, it will be disabled until the next time the game starts");
                 Consequence.INSTANCE.logger.warn(ex);
+
+                ex.printStackTrace();
             }
         }
     }

@@ -32,6 +32,7 @@ public class JavaToLua {
             return primitiveToLua(((Enum)object).name());
         }
 
+        //TODO
         if (object instanceof List) {
             return new ListAdapter((List) object);
         }
@@ -47,8 +48,13 @@ public class JavaToLua {
 
     private static Map<Class, AdapterInfo> registeredAdapters = Maps.newHashMap();
 
-    public static void initializeAdapterRegistry(File directory) {
-        for (File file : directory.listFiles((dir, name) -> name.endsWith("json"))) {
+    private static void loadFiles(File directory) {
+        for (File file : directory.listFiles()) {
+            if (file.isDirectory()) {
+                loadFiles(file);
+                continue;
+            }
+
             AdapterInfo info;
             try {
                 info = GsonUtil.gson().fromJson(new FileReader(file), AdapterInfo.class);
@@ -62,14 +68,27 @@ public class JavaToLua {
 
             registerAdapter(info);
         }
+    }
+
+    public static void initializeAdapterRegistry(File directory) {
+        loadFiles(directory);
 
         for (Class clazz : registeredAdapters.keySet()) {
+            // First, for each class we have registered, merge in any adapters that have to do with
+            // interfaces this class implements
             AdapterInfo base = registeredAdapters.get(clazz);
-            // For each class we have a type adapter for, we travel up its superclass chain, merging any data
-            // we find, so that a class adapter has all the defined information of its parent classes as well
 
+            for (Class iface : clazz.getInterfaces()) {
+                AdapterInfo info = registeredAdapters.get(iface);
+                if (info != null) {
+                    base.data = AdapterInfo.Data.merge(base.data, info.data);
+                }
+            }
+
+            //Then travel up its superclass chain, merging any data
+            // we find, so that a class adapter has all the defined information of its parent classes as well
             Class parent = clazz.getSuperclass();
-            while (parent != Object.class) {
+            while (parent != null && parent != Object.class) {
                 AdapterInfo info = registeredAdapters.get(parent);
                 if (info != null) {
                     base.data = AdapterInfo.Data.merge(base.data, info.data);
@@ -89,10 +108,13 @@ public class JavaToLua {
     }
 
     public static AdapterInfo getAdapter(Class clazz) {
+        if (clazz == Object.class)
+            return AdapterInfo.BLANK;
+
         if (registeredAdapters.containsKey(clazz)) {
             return registeredAdapters.get(clazz);
         } else {
-            return AdapterInfo.BLANK;
+            return getAdapter(clazz.getSuperclass());
         }
     }
 

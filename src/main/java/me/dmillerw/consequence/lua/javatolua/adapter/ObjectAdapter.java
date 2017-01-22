@@ -26,6 +26,14 @@ public class ObjectAdapter extends BaseAdapter {
         this.rawset("_java_class", object.getClass().getName());
     }
 
+    public final AdapterInfo getAdapterInfo() {
+        return info;
+    }
+
+    public final Object getObject() {
+        return object;
+    }
+
     @Override
     public LuaValue getValue(String key) {
         String java = info.data.luaToJavaMap.get(key);
