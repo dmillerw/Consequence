@@ -1,16 +1,16 @@
 package me.dmillerw.consequence.lua.javatolua;
 
 import com.google.common.collect.Maps;
+import com.google.common.io.Files;
 import me.dmillerw.consequence.Consequence;
-import me.dmillerw.consequence.lua.javatolua.adapter.LuaObject;
 import me.dmillerw.consequence.lua.javatolua.adapter.Adapter;
+import me.dmillerw.consequence.lua.javatolua.adapter.LuaObject;
 import me.dmillerw.consequence.lua.javatolua.adapter.special.ListAdapter;
 import me.dmillerw.consequence.util.GsonUtil;
 import org.luaj.vm2.*;
 
 import java.io.File;
 import java.io.FileReader;
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -56,10 +56,13 @@ public class JavaToLua {
                 continue;
             }
 
+            if (!Files.getFileExtension(file.getName()).equalsIgnoreCase("json"))
+                continue;
+
             Adapter.Data data;
             try {
                 data = GsonUtil.gson().fromJson(new FileReader(file), Adapter.Data.class);
-            } catch (IOException ex) {
+            } catch (Exception ex) {
                 Consequence.INSTANCE.logger.warn("Failed to load type adapter from " + file.getName());
                 Consequence.INSTANCE.logger.warn(ex);
                 continue;

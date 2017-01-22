@@ -4,6 +4,7 @@ import me.dmillerw.consequence.Consequence;
 import me.dmillerw.consequence.event.EventHandler;
 import me.dmillerw.consequence.lua.javatolua.JavaToLua;
 import me.dmillerw.consequence.script.ScriptRegistry;
+import me.dmillerw.consequence.util.MappingLookup;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
@@ -23,6 +24,8 @@ public class CommonProxy implements IProxy {
 
     @Override
     public void preInit(FMLPreInitializationEvent event) {
+        MappingLookup.initialize();
+
         JavaToLua.initializeAdapterRegistry(Consequence.INSTANCE.adapterDir);
         ScriptRegistry.initialize(Consequence.INSTANCE.scriptDir);
 
@@ -31,7 +34,7 @@ public class CommonProxy implements IProxy {
 
     @Override
     public void init(FMLInitializationEvent event) {
-
+        System.out.println(MappingLookup.mapField("net/minecraft/init/Enchantments", "PROTECTION", "Lnet/minecraft/enchantment/Enchantment;"));
     }
 
     @Override

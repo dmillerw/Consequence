@@ -1,17 +1,17 @@
 {
   "class": "net.minecraftforge.fml.common.eventhandler.Event",
   "methods": [
-    {"name": ["is_cancelable", "isCancelable"]},
-    {"name": ["is_canceled", "isCanceled"]},
+    {"name": ["is_cancelable", "isCancelable"], "type": "Z"},
+    {"name": ["is_canceled", "isCanceled"], "type": "Z"},
     {
       "name": ["set_canceled", "setCanceled"],
       "parameters": ["Z"]
     },
-    {"name": ["has_result", "hasResult"]},
-    {"name": ["get_result", "getResult"]},
+    {"name": ["has_result", "hasResult"], "type": "Z"},
+    {"name": ["get_result", "getResult"], "type": "Z"},
     {
       "name": ["set_result", "setResult"],
-      "parameters": ["net/minecraftforge/fml/common/eventhandler/Event$Result"]
+      "parameters": ["net.minecraftforge.fml.common.eventhandler.Event$Result"]
     }
   ]
 }

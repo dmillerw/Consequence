@@ -6,6 +6,7 @@ import com.google.common.collect.HashBiMap;
 import com.google.common.collect.Maps;
 import com.google.gson.annotations.SerializedName;
 import me.dmillerw.consequence.Consequence;
+import me.dmillerw.consequence.util.MappingLookup;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -33,6 +34,7 @@ public class Adapter {
     public static class VariableInfo {
 
         private Name name;
+        private String type;
 
         public String lua() {
             return name.name[0];
@@ -47,6 +49,8 @@ public class Adapter {
 
         private Name name;
         public String[] parameters = new String[0];
+        @SerializedName("return_type")
+        public String returnType = "V";
 
         public String lua() {
             return name.name[0];
@@ -95,7 +99,6 @@ public class Adapter {
             Consequence.INSTANCE.logger.warn("Failed to load " + data.filename + ". " + data.clazz + " is not a valid Java class");
         }
 
-
         this.variables = Maps.newHashMap();
         this.methods = Maps.newHashMap();
         this.luaToJavaMap = HashBiMap.create();
@@ -103,28 +106,30 @@ public class Adapter {
         if (this.clazz == null)
             return;
 
-        try {
-            initializeReflection(data);
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
+        initializeReflection(data);
     }
 
     private void initializeReflection(Data data) {
+        String className = data.clazz.replace(".", "/");
+
+        Consequence.INSTANCE.logger.info("Adapting " + className + "(" + MappingLookup.mapClass(className) + ")");
+
         for (VariableInfo variable : data.variables) {
+            String name = MappingLookup.mapField(className, variable.java(), variable.type);
+
             Field field;
             try {
-                field = clazz.getField(variable.java());
+                field = clazz.getField(name);
             } catch (NoSuchFieldException ex) {
                 field = null;
 
                 Consequence.INSTANCE.logger.warn("Ran into an issue while building adapters from " + data.filename);
-                Consequence.INSTANCE.logger.warn("The variable " + variable.java() + " does not exist within " + data.clazz + ". It will be ignored");
+                Consequence.INSTANCE.logger.warn("The variable " + name + " does not exist within " + data.clazz + ". It will be ignored");
             }
 
             if (field != null) {
-                luaToJavaMap.put(variable.lua(), variable.java());
-                variables.put(variable.java(), field);
+                luaToJavaMap.put(variable.lua(), name);
+                variables.put(name, field);
             }
         }
 
@@ -139,20 +144,36 @@ public class Adapter {
                 }
             }
 
+            String desc = "(";
+            for (int i=0; i<methodInfo.parameters.length; i++) desc = desc + formatClassToASM(methodInfo.parameters[i]);
+            desc = desc + ")" + formatClassToASM(methodInfo.returnType);
+
+            System.out.println("UNMAPPED METHOD: " + methodInfo.java());
+            String name = MappingLookup.mapMethod(className, methodInfo.java(), desc);
+            System.out.println("MAPPED METHOD: " + name);
+
             Method method;
             try {
-                method = clazz.getMethod(methodInfo.java(), params);
+                method = clazz.getMethod(name, params);
             } catch (NoSuchMethodException ex) {
                 method = null;
 
                 Consequence.INSTANCE.logger.warn("Ran into an issue while building adapters from " + data.filename);
-                Consequence.INSTANCE.logger.warn("The method " + methodInfo.java() + " and parameters " + Arrays.toString(methodInfo.parameters) + " do not exist within " + data.clazz + ". It will be ignored");
+                Consequence.INSTANCE.logger.warn("The method " + name + " and parameters " + Arrays.toString(methodInfo.parameters) + " do not exist within " + data.clazz + ". It will be ignored");
             }
 
             if (method != null) {
-                luaToJavaMap.put(methodInfo.lua(), methodInfo.java() + "()");
-                methods.put(methodInfo.java() + "()", method);
+                luaToJavaMap.put(methodInfo.lua(), name + "()");
+                methods.put(name + "()", method);
             }
+        }
+    }
+
+    private String formatClassToASM(String string) {
+        if (string.length() > 1) {
+            return "L" + MappingLookup.mapClass(string.replace(".", "/")) + ";";
+        } else {
+            return string;
         }
     }
 

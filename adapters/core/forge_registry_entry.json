@@ -1,8 +1,6 @@
 {
   "class": "net.minecraftforge.fml.common.registry.IForgeRegistryEntry",
   "methods": [
-    {
-      "name": ["get_registry_name", "getRegistryName"]
-    }
+    {"name": ["get_registry_name", "getRegistryName"], "return_type": "net.minecraft.util.ResourceLocation"}
   ]
 }

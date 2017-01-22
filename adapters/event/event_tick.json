@@ -1,8 +1,8 @@
 {
   "class": "net.minecraftforge.fml.common.gameevent.TickEvent",
   "variables": [
-    {"name": "type"},
-    {"name": "side"},
-    {"name": "phase"}
+    {"name": "type", "type": "net.minecraftforge.fml.common.gameevent.TickEvent$Type"},
+    {"name": "side", "type": "net.minecraftforge.fml.relauncher.Side"},
+    {"name": "phase", "type": "net.minecraftforge.fml.common.gameevent.TickEvent$Phase"}
   ]
 }

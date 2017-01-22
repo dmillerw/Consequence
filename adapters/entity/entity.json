@@ -1,11 +1,11 @@
 {
   "class": "net.minecraft.entity.Entity",
   "variables": [
-    { "name": "posX" },
-    { "name": "posY" },
-    { "name": "posZ" }
+    { "name": "posX", "type": "D" },
+    { "name": "posY", "type": "D" },
+    { "name": "posZ", "type": "D" }
   ],
   "methods": [
-    { "name": ["get_world", "getEntityWorld"] }
+    { "name": ["get_world", "getEntityWorld"], "return_type": "net.minecraft.world.World" }
   ]
 }

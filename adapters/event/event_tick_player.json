@@ -1,6 +1,6 @@
 {
   "class": "net.minecraftforge.fml.common.gameevent.TickEvent$PlayerTickEvent",
   "variables": [
-    {"name": "player"}
+    {"name": "player", "type": "net.minecraft.entity.player.EntityPlayer"}
   ]
 }
