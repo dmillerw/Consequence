@@ -33,11 +33,13 @@ minecraft {
 task download_mcp() << {
     String date = minecraft.mappings.substring(minecraft.mappings.lastIndexOf("_") + 1)
 
-    download {
-        // This should work and it doesn't, so boo
-//      src 'http://export.mcpbot.bspk.rs/mcp_snapshot_nodoc/' + date + '-1.11/mcp_' + minecraft.mappings + '-1.11.zip'
-        src 'http://export.mcpbot.bspk.rs/mcp_snapshot_nodoc/20161220-1.11/mcp_snapshot_nodoc-20161220-1.11.zip'
-        dest 'build/mcp/' + minecraft.mappings + '.zip'
+    if (!file("build/mcp/${minecraft.mappings}.zip").exists()) {
+        download {
+            // This should work and it doesn't, so boo
+//          src 'http://export.mcpbot.bspk.rs/mcp_snapshot_nodoc/' + date + '-1.11/mcp_' + minecraft.mappings + '-1.11.zip'
+            src 'http://export.mcpbot.bspk.rs/mcp_snapshot_nodoc/20161220-1.11/mcp_snapshot_nodoc-20161220-1.11.zip'
+            dest 'build/mcp/' + minecraft.mappings + '.zip'
+        }
     }
 }
 

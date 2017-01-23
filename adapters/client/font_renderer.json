@@ -6,7 +6,8 @@
   "methods": [
     {
       "name": ["draw_string", "drawString"],
-      "parameters": ["java.lang.String", "I", "I", "I"]
+      "parameters": ["java.lang.String", "I", "I", "I"],
+      "return_type": "I"
     }
   ]
 }
