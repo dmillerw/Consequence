@@ -1,7 +1,6 @@
 package me.dmillerw.consequence.lua.luatojava;
 
 import me.dmillerw.consequence.lua.javatolua.adapter.LuaObject;
-import me.dmillerw.consequence.lua.transform.TransformerRegistry;
 import org.luaj.vm2.LuaValue;
 
 import java.util.HashMap;
@@ -33,7 +32,7 @@ public class LuaToJava {
                         return null;
                     }
                 } else {
-                    return TransformerRegistry.transform(javaType, value);
+                    return null;
                 }
             }
         }

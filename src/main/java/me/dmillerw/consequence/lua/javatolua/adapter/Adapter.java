@@ -4,15 +4,19 @@ import com.google.common.base.Throwables;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.google.gson.annotations.SerializedName;
 import me.dmillerw.consequence.Consequence;
 import me.dmillerw.consequence.util.MappingLookup;
 import org.luaj.vm2.lib.VarArgFunction;
 
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.Arrays;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * @author dmillerw
@@ -26,10 +30,20 @@ public class Adapter {
         @SerializedName("class")
         public String clazz;
 
+        @SerializedName("simple_name")
+        public String simpleName;
+
+        public ConstructorInfo[] constructors = new ConstructorInfo[0];
         public VariableInfo[] variables = new VariableInfo[0];
         public MethodInfo[] methods = new MethodInfo[0];
 
         public transient String filename;
+    }
+
+    public static class ConstructorInfo {
+
+        public String name;
+        public String[] parameters;
     }
 
     public static class VariableInfo {
@@ -80,16 +94,25 @@ public class Adapter {
 
     public Class clazz;
 
+    public String simpleName;
+
+    public final Set<String> staticMethods;
+
+    public final Map<String, Constructor> constructors;
     public final Map<String, Field> variables;
     public final Map<String, Method> methods;
 
+    public final Map<String, VarArgFunction> luaConstructorCalls;
     public final Map<String, VarArgFunction> luaMethodCalls;
 
     public final BiMap<String, String> luaToJavaMap;
 
     public Adapter() {
+        this.staticMethods = Sets.newHashSet();
+        this.constructors = Maps.newHashMap();
         this.variables = Maps.newHashMap();
         this.methods = Maps.newHashMap();
+        this.luaConstructorCalls = Maps.newHashMap();
         this.luaMethodCalls = Maps.newHashMap();
         this.luaToJavaMap = HashBiMap.create();
     }
@@ -103,8 +126,13 @@ public class Adapter {
             Consequence.INSTANCE.logger.warn("Failed to load " + data.filename + ". " + data.clazz + " is not a valid Java class");
         }
 
+        this.simpleName = data.simpleName;
+
+        this.staticMethods = Sets.newHashSet();
+        this.constructors = Maps.newHashMap();
         this.variables = Maps.newHashMap();
         this.methods = Maps.newHashMap();
+        this.luaConstructorCalls = Maps.newHashMap();
         this.luaMethodCalls = Maps.newHashMap();
         this.luaToJavaMap = HashBiMap.create();
 
@@ -136,6 +164,32 @@ public class Adapter {
             }
         }
 
+        for (ConstructorInfo constructorInfo : data.constructors) {
+            Class[] params = new Class[constructorInfo.parameters.length];
+            for (int i=0; i<params.length; i++) {
+                try {
+                    params[i] = getClassFromString(constructorInfo.parameters[i]);
+                } catch (ClassNotFoundException ex) {
+                    Consequence.INSTANCE.logger.warn("Ran into an issue while building adapters from " + data.filename);
+                    Consequence.INSTANCE.logger.warn("The paramater " + constructorInfo.parameters[i] + " is not a valid class. The constructor " + constructorInfo.name + " will be ignored");
+                }
+            }
+
+            Constructor constructor;
+            try {
+                constructor = clazz.getConstructor(params);
+            } catch (NoSuchMethodException ex) {
+                constructor = null;
+
+                Consequence.INSTANCE.logger.warn("Ran into an issue while building adapters from " + data.filename);
+                Consequence.INSTANCE.logger.warn("The constructor " + Arrays.toString(constructorInfo.parameters) + " does not exist within " + data.clazz + ". It will be ignored");
+            }
+
+            if (constructor != null) {
+                constructors.put(constructorInfo.name, constructor);
+            }
+        }
+
         for (MethodInfo methodInfo : data.methods) {
             Class[] params = new Class[methodInfo.parameters.length];
             for (int i=0; i<params.length; i++) {
@@ -164,6 +218,7 @@ public class Adapter {
             }
 
             if (method != null) {
+                if (Modifier.isStatic(method.getModifiers())) staticMethods.add(name + "()");
                 luaToJavaMap.put(methodInfo.lua(), name + "()");
                 methods.put(name + "()", method);
             }

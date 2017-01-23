@@ -6,7 +6,8 @@ import me.dmillerw.consequence.Consequence;
 import me.dmillerw.consequence.lua.javatolua.adapter.Adapter;
 import me.dmillerw.consequence.lua.javatolua.adapter.LuaObject;
 import me.dmillerw.consequence.lua.javatolua.adapter.special.ListAdapter;
-import me.dmillerw.consequence.lua.transform.TransformerRegistry;
+import me.dmillerw.consequence.lua.library.Library;
+import me.dmillerw.consequence.lua.library.StaticAccessor;
 import me.dmillerw.consequence.util.GsonUtil;
 import org.luaj.vm2.*;
 
@@ -47,12 +48,7 @@ public class JavaToLua {
             if (luaObject != null) {
                 return luaObject;
             } else {
-                LuaValue value = TransformerRegistry.transform(object);
-                if (value != null) {
-                    return value;
-                } else {
-                    return NIL;
-                }
+                return NIL;
             }
         }
     }
@@ -60,6 +56,18 @@ public class JavaToLua {
     /* ADAPTERS */
 
     private static Map<Class, Adapter> registeredAdapters = Maps.newHashMap();
+
+    public static void generateStaticAccessors(Globals globals) {
+        for (Adapter adapter : registeredAdapters.values()) {
+            if (adapter.simpleName == null || adapter.simpleName.isEmpty())
+                continue;
+
+            if (adapter.staticMethods.isEmpty() && adapter.constructors.isEmpty())
+                continue;
+
+            Library.register(globals, new StaticAccessor(adapter));
+        }
+    }
 
     private static void loadFiles(File directory) {
         for (File file : directory.listFiles()) {
@@ -82,7 +90,7 @@ public class JavaToLua {
 
             data.filename = file.getName();
 
-            registerAdapter(new Adapter(data));
+            registerAdapter(data);
         }
     }
 
@@ -117,9 +125,10 @@ public class JavaToLua {
         }
     }
 
-    public static void registerAdapter(Adapter info) {
-        if (info.clazz == null) return;
-        registeredAdapters.put(info.clazz, info);
+    private static void registerAdapter(Adapter.Data data) {
+        Adapter adapter = new Adapter(data);
+        if (adapter.clazz == null) return;
+        registeredAdapters.put(adapter.clazz, adapter);
     }
 
     public static Adapter getAdapter(Class clazz) {

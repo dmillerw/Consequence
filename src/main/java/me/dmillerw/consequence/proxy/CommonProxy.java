@@ -3,10 +3,6 @@ package me.dmillerw.consequence.proxy;
 import me.dmillerw.consequence.Consequence;
 import me.dmillerw.consequence.event.EventHandler;
 import me.dmillerw.consequence.lua.javatolua.JavaToLua;
-import me.dmillerw.consequence.lua.library.Library;
-import me.dmillerw.consequence.lua.library.util.BlockPosLib;
-import me.dmillerw.consequence.lua.library.util.ItemStackLib;
-import me.dmillerw.consequence.lua.transform.TransformerRegistry;
 import me.dmillerw.consequence.script.ScriptRegistry;
 import me.dmillerw.consequence.util.MappingLookup;
 import net.minecraftforge.common.MinecraftForge;
@@ -31,7 +27,6 @@ public class CommonProxy implements IProxy {
         MappingLookup.initialize();
 
         JavaToLua.initializeAdapterRegistry(Consequence.INSTANCE.adapterDir);
-        TransformerRegistry.initialize();
         ScriptRegistry.initialize(Consequence.INSTANCE.scriptDir);
 
         MinecraftForge.EVENT_BUS.register(EventHandler.class);
@@ -55,8 +50,5 @@ public class CommonProxy implements IProxy {
         globals.load(new TableLib());
         globals.load(new StringLib());
         globals.load(new JseMathLib());
-
-        Library.register(globals, new BlockPosLib());
-        Library.register(globals, new ItemStackLib());
     }
 }

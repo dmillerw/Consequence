@@ -1,6 +1,11 @@
 {
   "class": "net.minecraft.item.ItemStack",
+  "simple_name": "itemstack",
+  "constructors": [
+    {"name": "new", "parameters": ["net.minecraft.item.Item", "I", "I"]}
+  ],
   "methods": [
-    {"name": ["get_item", "getItem"], "return_type": "net.minecraft.item.Item"}
+    {"name": ["get_item", "getItem"], "return_type": "net.minecraft.item.Item"},
+    {"name": ["is_nil", "isEmpty"], "return_type": "Z"}
   ]
 }

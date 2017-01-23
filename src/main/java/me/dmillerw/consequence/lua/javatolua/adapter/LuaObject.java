@@ -56,28 +56,32 @@ public class LuaObject extends LuaTable {
 
             VarArgFunction luaFunction = adapter.luaMethodCalls.get(function);
             if (luaFunction == null) {
-                luaFunction = new VarArgFunction() {
+                if (!adapter.staticMethods.contains(function)) {
+                    luaFunction = new VarArgFunction() {
 
-                    @Override
-                    public Varargs invoke(Varargs args) {
-                        LuaValue self = args.arg(1);
-                        if (self instanceof LuaObject && ((LuaObject) self).adapter.clazz.equals(adapter.clazz)) {
-                            Object[] data = new Object[method.getParameters().length];
-                            for (int i=0; i < data.length; i++) {
-                                data[i] = LuaToJava.convert(method.getParameters()[i].getType(), args.arg(i + 2));
-                            }
+                        @Override
+                        public Varargs invoke(Varargs args) {
+                            LuaValue self = args.arg(1);
+                            if (self instanceof LuaObject && ((LuaObject) self).adapter.clazz.equals(adapter.clazz)) {
+                                Object[] data = new Object[method.getParameters().length];
+                                for (int i=0; i < data.length; i++) {
+                                    data[i] = LuaToJava.convert(method.getParameters()[i].getType(), args.arg(i + 2));
+                                }
 
-                            try {
-                                return JavaToLua.convert(method.invoke(((LuaObject) self).object, data));
-                            } catch (Exception ex) {
-                                ex.printStackTrace();
+                                try {
+                                    return JavaToLua.convert(method.invoke(((LuaObject) self).object, data));
+                                } catch (Exception ex) {
+                                    ex.printStackTrace();
+                                    return NIL;
+                                }
+                            } else {
                                 return NIL;
                             }
-                        } else {
-                            return NIL;
                         }
-                    }
-                };
+                    };
+                }
+
+                adapter.luaMethodCalls.put(function, luaFunction);
             }
 
             rawset(adapter.luaToJavaMap.inverse().get(function), luaFunction);

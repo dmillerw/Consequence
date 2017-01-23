@@ -72,6 +72,7 @@ public class ScriptRegistry {
     private static void loadScript(Script script) {
         Globals globals = new Globals();
         Consequence.PROXY.buildLuaGlobals(globals);
+        JavaToLua.generateStaticAccessors(globals);
         LoadState.install(globals);
         LuaC.install(globals);
 

@@ -1,6 +1,12 @@
 {
   "class": "net.minecraft.item.Item",
+  "simple_name": "item",
   "methods": [
+    {
+      "name": ["get_item", "getByNameOrId"],
+      "parameters": ["java.lang.String"],
+      "return_type": "net.minecraft.item.Item"
+    },
     {
       "name": ["get_unlocalized_name", "getUnlocalizedName"],
       "parameters": ["net.minecraft.item.ItemStack"],
