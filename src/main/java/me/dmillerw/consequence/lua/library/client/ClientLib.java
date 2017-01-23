@@ -1,28 +1,27 @@
 package me.dmillerw.consequence.lua.library.client;
 
 import me.dmillerw.consequence.lua.javatolua.JavaToLua;
+import me.dmillerw.consequence.lua.library.Library;
 import net.minecraft.client.Minecraft;
 import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaValue;
-import org.luaj.vm2.lib.TwoArgFunction;
 import org.luaj.vm2.lib.ZeroArgFunction;
 
 /**
  * @author dmillerw
  */
-public class ClientLib extends TwoArgFunction {
+public class ClientLib extends Library {
 
     @Override
-    public LuaValue call(LuaValue modname, LuaValue env) {
-        LuaTable table = new LuaTable();
+    public String name() {
+        return "client";
+    }
 
-        table.set("get_player", new get_player());
-        table.set("get_world", new get_world());
-        table.set("get_font_renderer", new get_font_renderer());
-
-        env.set("client", table);
-
-        return NIL;
+    @Override
+    public void register(LuaValue library) {
+        library.set("get_player", new get_player());
+        library.set("get_world", new get_world());
+        library.set("get_font_renderer", new get_font_renderer());
     }
 
     static class get_player extends ZeroArgFunction {

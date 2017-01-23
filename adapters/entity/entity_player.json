@@ -5,6 +5,10 @@
       "name": ["get_stack_in_equipment_slot", "getItemStackFromSlot"],
       "parameters": ["net.minecraft.inventory.EntityEquipmentSlot"],
       "return_type": "net.minecraft.item.ItemStack"
+    },
+    {
+      "name": ["set_stack_in_equipment_slot", "setItemStackToSlot"],
+      "parameters": ["net.minecraft.inventory.EntityEquipmentSlot", "net.minecraft.item.ItemStack"]
     }
   ]
 }

@@ -1,5 +1,6 @@
 package me.dmillerw.consequence.proxy;
 
+import me.dmillerw.consequence.lua.library.Library;
 import me.dmillerw.consequence.lua.library.client.ClientLib;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
@@ -30,6 +31,6 @@ public class ClientProxy extends CommonProxy implements IProxy {
     public void buildLuaGlobals(Globals globals) {
         super.buildLuaGlobals(globals);
 
-        globals.load(new ClientLib());
+        Library.register(globals, new ClientLib());
     }
 }

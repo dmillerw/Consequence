@@ -1,8 +1,8 @@
 package me.dmillerw.consequence.lua.luatojava;
 
 import me.dmillerw.consequence.lua.javatolua.adapter.LuaObject;
+import me.dmillerw.consequence.lua.transform.TransformerRegistry;
 import org.luaj.vm2.LuaValue;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -33,7 +33,7 @@ public class LuaToJava {
                         return null;
                     }
                 } else {
-                    throw new NotImplementedException();
+                    return TransformerRegistry.transform(javaType, value);
                 }
             }
         }

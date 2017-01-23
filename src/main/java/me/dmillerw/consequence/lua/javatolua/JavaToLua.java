@@ -6,6 +6,7 @@ import me.dmillerw.consequence.Consequence;
 import me.dmillerw.consequence.lua.javatolua.adapter.Adapter;
 import me.dmillerw.consequence.lua.javatolua.adapter.LuaObject;
 import me.dmillerw.consequence.lua.javatolua.adapter.special.ListAdapter;
+import me.dmillerw.consequence.lua.transform.TransformerRegistry;
 import me.dmillerw.consequence.util.GsonUtil;
 import org.luaj.vm2.*;
 
@@ -15,6 +16,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static org.luaj.vm2.LuaValue.NIL;
+
 /**
  * @author dmillerw
  */
@@ -22,7 +25,7 @@ public class JavaToLua {
 
     public static LuaValue convert(Object object) {
         if (object == null)
-            return LuaValue.NIL;
+            return NIL;
 
         if (LuaValue.class.isAssignableFrom(object.getClass())) {
             return (LuaValue) object;
@@ -41,7 +44,16 @@ public class JavaToLua {
             return primitiveToLua(object);
         } else {
             LuaObject luaObject = adaptObject(object);
-            return luaObject == null ? LuaValue.NIL : luaObject;
+            if (luaObject != null) {
+                return luaObject;
+            } else {
+                LuaValue value = TransformerRegistry.transform(object);
+                if (value != null) {
+                    return value;
+                } else {
+                    return NIL;
+                }
+            }
         }
     }
 
@@ -195,7 +207,7 @@ public class JavaToLua {
     private static LuaValue primitiveToLua(Object object) {
         PrimitiveToLua primitiveToLua = JavaToLua.primitiveMap.get(object.getClass());
         if (primitiveToLua == null)
-            return LuaValue.NIL;
+            return NIL;
         else
             return primitiveToLua.call(object);
     }

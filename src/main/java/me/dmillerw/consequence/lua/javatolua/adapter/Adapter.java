@@ -68,14 +68,14 @@ public class Adapter {
     }
 
     // Temporary
-    public static Adapter merge(Adapter ... adapter) {
-        Adapter merged = new Adapter();
+    public static Adapter merge(Adapter base, Adapter ... adapter) {
         for (Adapter a : adapter) {
-            merged.variables.putAll(a.variables);
-            merged.methods.putAll(a.methods);
-            merged.luaToJavaMap.putAll(a.luaToJavaMap);
+            base.variables.putAll(a.variables);
+            base.methods.putAll(a.methods);
+            base.luaToJavaMap.putAll(a.luaToJavaMap);
         }
-        return merged;
+
+        return base;
     }
 
     public Class clazz;
