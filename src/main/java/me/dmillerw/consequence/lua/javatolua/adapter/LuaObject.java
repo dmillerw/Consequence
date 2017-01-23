@@ -2,6 +2,7 @@ package me.dmillerw.consequence.lua.javatolua.adapter;
 
 import me.dmillerw.consequence.lua.javatolua.JavaToLua;
 import me.dmillerw.consequence.lua.luatojava.LuaToJava;
+import org.luaj.vm2.LuaTable;
 import org.luaj.vm2.LuaValue;
 import org.luaj.vm2.Varargs;
 import org.luaj.vm2.lib.VarArgFunction;
@@ -12,7 +13,7 @@ import java.lang.reflect.Method;
 /**
  * @author dmillerw
  */
-public class LuaObject extends SimpleTable {
+public class LuaObject extends LuaTable {
 
     private final Adapter adapter;
     private final Object object;
@@ -24,6 +25,8 @@ public class LuaObject extends SimpleTable {
         this.object = object;
 
         this.rawset("_java_class", object.getClass().getName());
+
+        this.fillTable();
     }
 
     public final Adapter getAdapter() {
@@ -34,54 +37,106 @@ public class LuaObject extends SimpleTable {
         return object;
     }
 
-    @Override
-    public LuaValue getValue(String key) {
-        String java = adapter.luaToJavaMap.get(key);
-        if (java != null) {
-            if (java.endsWith("()")) {
-                Method method = adapter.methods.get(java);
-                return new VarArgFunction() {
+    private final void fillTable() {
+        // Variables
+        for (String variable : adapter.variables.keySet()) {
+            Field field = adapter.variables.get(variable);
+            LuaValue value = NIL;
+            try {
+                value = JavaToLua.convert(field.get(object));
+            } catch (Exception ignore) {
+            }
+
+            rawset(adapter.luaToJavaMap.inverse().get(variable), value);
+        }
+
+        // Methods
+        for (String function : adapter.methods.keySet()) {
+            Method method = adapter.methods.get(function);
+
+            VarArgFunction luaFunction = adapter.luaMethodCalls.get(function);
+            if (luaFunction == null) {
+                luaFunction = new VarArgFunction() {
+
                     @Override
                     public Varargs invoke(Varargs args) {
-                        Object[] data = new Object[method.getParameters().length];
-                        for (int i = 0; i < data.length; i++) {
-                            data[i] = LuaToJava.convert(method.getParameters()[i].getType(), args.arg(i + 1));
-                        }
+                        LuaValue self = args.arg(1);
+                        if (self instanceof LuaObject && ((LuaObject) self).adapter.clazz.equals(adapter.clazz)) {
+                            Object[] data = new Object[method.getParameters().length];
+                            for (int i=0; i < data.length; i++) {
+                                data[i] = LuaToJava.convert(method.getParameters()[i].getType(), args.arg(i + 2));
+                            }
 
-                        try {
-                            return JavaToLua.convert(method.invoke(LuaObject.this.object, data));
-                        } catch (Exception ex) {
-                            ex.printStackTrace();
+                            try {
+                                return JavaToLua.convert(method.invoke(((LuaObject) self).object, data));
+                            } catch (Exception ex) {
+                                ex.printStackTrace();
+                                return NIL;
+                            }
+                        } else {
                             return NIL;
                         }
                     }
                 };
-            } else {
-                try {
-                    return JavaToLua.convert(adapter.variables.get(java).get(this.object));
-                } catch (Exception ex) {
-                    ex.printStackTrace();
-                    return NIL;
-                }
             }
-        } else {
-            return null;
+
+            rawset(adapter.luaToJavaMap.inverse().get(function), luaFunction);
         }
     }
 
-    @Override
-    public boolean setValue(String key, LuaValue value) {
+    private boolean setValue(String key, LuaValue value) {
         String java = adapter.luaToJavaMap.get(key);
         if (java != null) {
             if (java.endsWith("()")) {
-                return true;
+                return false;
             } else {
                 Field field = adapter.variables.get(java);
-                try {field.set(this.object, LuaToJava.convert(field.getType(), value));} catch (Exception ignore) { ignore.printStackTrace(); }
-                return true;
+                try {
+                    field.set(this.object, LuaToJava.convert(field.getType(), value));
+                    return true;
+                } catch (Exception ignore) {
+                    ignore.printStackTrace();
+                }
+
+                return false;
             }
         } else {
             return false;
         }
+    }
+
+    @Override
+    public final void set(int key, LuaValue value) {
+        if (setValue(String.valueOf(key), value)) super.set(key, value);
+    }
+
+    @Override
+    public final void set(LuaValue key, LuaValue value) {
+        if (setValue(key.tojstring(), value)) super.set(key, value);
+    }
+
+    @Override
+    public final void set(int key, String value) {
+        if (setValue(String.valueOf(key), LuaValue.valueOf(value))) super.set(key, value);
+    }
+
+    @Override
+    public final void set(String key, LuaValue value) {
+        if (setValue(key, value)) super.set(key, value);
+    }
+
+    @Override
+    public final void set(String key, double value) {
+        if (setValue(key, LuaValue.valueOf(value))) super.set(key, value);
+    }
+
+    @Override
+    public final void set(String key, int value) {
+        if (setValue(key, LuaValue.valueOf(value))) super.set(key, value);
+    }
+
+    @Override
+    public final void set(String key, String value) {
+        if (setValue(key, LuaValue.valueOf(value))) super.set(key, value);
     }
 }

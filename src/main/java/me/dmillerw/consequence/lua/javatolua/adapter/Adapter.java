@@ -7,6 +7,7 @@ import com.google.common.collect.Maps;
 import com.google.gson.annotations.SerializedName;
 import me.dmillerw.consequence.Consequence;
 import me.dmillerw.consequence.util.MappingLookup;
+import org.luaj.vm2.lib.VarArgFunction;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -82,11 +83,14 @@ public class Adapter {
     public final Map<String, Field> variables;
     public final Map<String, Method> methods;
 
+    public final Map<String, VarArgFunction> luaMethodCalls;
+
     public final BiMap<String, String> luaToJavaMap;
 
     public Adapter() {
         this.variables = Maps.newHashMap();
         this.methods = Maps.newHashMap();
+        this.luaMethodCalls = Maps.newHashMap();
         this.luaToJavaMap = HashBiMap.create();
     }
 
@@ -101,6 +105,7 @@ public class Adapter {
 
         this.variables = Maps.newHashMap();
         this.methods = Maps.newHashMap();
+        this.luaMethodCalls = Maps.newHashMap();
         this.luaToJavaMap = HashBiMap.create();
 
         if (this.clazz == null)
